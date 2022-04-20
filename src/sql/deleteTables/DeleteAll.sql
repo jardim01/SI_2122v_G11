@@ -1,0 +1,11 @@
+DELETE FROM clientes_institucionais;
+DELETE FROM clientes_particulares;
+DELETE FROM registos_invalidos;
+DELETE FROM registos_processados;
+DELETE FROM alarme;
+DELETE FROM registos_nao_processados;
+DELETE FROM zona_verde;
+DELETE FROM veiculos;
+DELETE FROM estados_equipamentos;
+DELETE FROM frota_veiculos;
+DELETE FROM clientes;

@@ -1,0 +1,11 @@
+drop table if exists clientes_institucionais cascade;
+drop table if exists clientes_particulares cascade;
+drop table if exists clientes cascade;
+drop table if exists registos_invalidos cascade;
+drop table if exists registos_processados cascade;
+drop table if exists alarme cascade;
+drop table if exists registos_nao_processados cascade;
+drop table if exists zona_verde cascade;
+drop table if exists ESTADOS_EQUIPAMENTOS cascade;
+drop table if exists veiculos cascade;
+drop table if exists frota_veiculos cascade;
