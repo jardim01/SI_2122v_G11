@@ -46,3 +46,19 @@ INSERT INTO zonas_verdes (latitude, longitude, raio, matricula_fk)
 VALUES (-22.22222, 100.22222, 500, '00-AA-00');
 INSERT INTO zonas_verdes (latitude, longitude, raio, matricula_fk)
 VALUES (33.33333, -100.33333, 1000, '11-BB-11');
+
+INSERT INTO registos_processados (marca_temporal_proc, equip_fk, latitude, longitude)
+VALUES (CURRENT_TIMESTAMP(0), '1ZZZ', -22.22222, 100.22222);
+INSERT INTO registos_processados (marca_temporal_proc, equip_fk, latitude, longitude)
+VALUES (CURRENT_TIMESTAMP(0), '2XXX', 33.33333, -100.33333);
+
+INSERT INTO alarmes (reg_fk, marca_temporal)
+VALUES (1, CURRENT_TIMESTAMP(0));
+
+INSERT INTO alarmes (reg_fk, marca_temporal)
+VALUES (2, CURRENT_TIMESTAMP(0));
+
+INSERT INTO registos_invalidos (equip_id, marca_temporal_inval, latitude, longitude)
+VALUES ('1ZZZ', CURRENT_TIMESTAMP, -22.22222, 100.22222);
+INSERT INTO registos_invalidos (equip_id, marca_temporal_inval, latitude, longitude)
+VALUES ('2XXX', CURRENT_TIMESTAMP - INTERVAL '15' day, -22.22222, 100.22222);

@@ -28,7 +28,7 @@ create table clientes_particulares
 
 create table frotas_veiculos
 (
-    id         int primary key generated always as identity,
+    id         serial primary key,
     nome       text NOT NULL,
     cliente_fk int  not null,
     foreign key (cliente_fk) references clientes (nif)
@@ -41,8 +41,7 @@ create table estados_equipamentos
 
 create table veiculos
 (
-    matricula         varchar(8)  not null
-        constraint VEICULOS_PK primary key check (matricula like '__-__-__'),
+    matricula         varchar(8) primary key check (matricula like '__-__-__'),
     nome_cond_atual   text        not null,
     telef_cond_actual int         not null,
     equip_id          text unique not null,
@@ -54,7 +53,7 @@ create table veiculos
 
 create table zonas_verdes
 (
-    zona_id      int primary key generated always as identity,
+    zona_id      serial primary key,
     latitude     decimal(7, 5) not null check ( latitude between -90 and 90),
     longitude    decimal(8, 5) not null check ( longitude between -180 and 180),
     raio         int           not null,
@@ -65,30 +64,33 @@ create table zonas_verdes
 create table registos_nao_processados
 (
     equip_fk       text primary key,
-    marca_temporal timestamp  not null,
-    latitude       decimal(5) not null,
-    longitude      decimal(5) not null,
+    marca_temporal timestamp(0) not null,
+    latitude       decimal(7, 5)   not null,
+    longitude      decimal(8, 5)   not null,
     foreign key (equip_fk) references veiculos (equip_id)
 );
 
 create table registos_processados
 (
-    reg_id              int primary key generated always as identity,
-    marca_temporal_proc timestamp not null,
-    equip_fk            text      not null,
+    reg_id              serial primary key,
+    marca_temporal_proc timestamp(0) not null,
+    equip_fk            text         not null,
+    latitude            decimal(7, 5)   not null,
+    longitude           decimal(8, 5)   not null,
     foreign key (equip_fk) references veiculos (equip_id)
 );
 
 create table registos_invalidos
 (
-    equip_id             text       not null,
-    marca_temporal_inval timestamp  not null,
-    latitude             decimal(5) not null,
-    longitude            decimal(5) not null
+    equip_id             text          not null,
+    marca_temporal_inval timestamp(0)  not null,
+    latitude             decimal(7, 5) not null,
+    longitude            decimal(8, 5)    not null
 );
 
-create table alarme
+create table alarmes
 (
-    reg_fk int not null,
+    reg_fk         int          not null unique,
+    marca_temporal timestamp(0) not null,
     foreign key (reg_fk) references registos_processados (reg_id)
 );
