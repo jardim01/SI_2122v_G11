@@ -29,7 +29,7 @@ create table clientes_particulares
 create table frotas_veiculos
 (
     id         serial primary key,
-    nome       text NOT NULL,
+    nome       text not null,
     cliente_fk int  not null,
     foreign key (cliente_fk) references clientes (nif)
 );
@@ -41,7 +41,7 @@ create table estados_equipamentos
 
 create table veiculos
 (
-    matricula         varchar(8) primary key check (matricula like '__-__-__'),
+    matricula         varchar(8) primary key check (validar_matricula(matricula)),
     nome_cond_atual   text        not null,
     telef_cond_actual int         not null,
     equip_id          text unique not null,
@@ -57,26 +57,27 @@ create table zonas_verdes
     latitude     decimal(7, 5) not null check ( latitude between -90 and 90),
     longitude    decimal(8, 5) not null check ( longitude between -180 and 180),
     raio         int           not null,
-    matricula_fk text          not null,
+    matricula_fk varchar(8)    not null,
     foreign key (matricula_fk) references veiculos (matricula)
 );
 
 create table registos_nao_processados
 (
-    equip_fk       text primary key,
-    marca_temporal timestamp(0) not null,
-    latitude       decimal(7, 5)   not null,
-    longitude      decimal(8, 5)   not null,
+    reg_id         serial primary key,
+    equip_fk       text,
+    marca_temporal timestamp(0)  not null,
+    latitude       decimal(7, 5) not null,
+    longitude      decimal(8, 5) not null,
     foreign key (equip_fk) references veiculos (equip_id)
 );
 
 create table registos_processados
 (
     reg_id              serial primary key,
-    marca_temporal_proc timestamp(0) not null,
-    equip_fk            text         not null,
-    latitude            decimal(7, 5)   not null,
-    longitude           decimal(8, 5)   not null,
+    marca_temporal_proc timestamp(0)  not null,
+    equip_fk            text          not null,
+    latitude            decimal(7, 5) not null,
+    longitude           decimal(8, 5) not null,
     foreign key (equip_fk) references veiculos (equip_id)
 );
 
@@ -85,7 +86,7 @@ create table registos_invalidos
     equip_id             text          not null,
     marca_temporal_inval timestamp(0)  not null,
     latitude             decimal(7, 5) not null,
-    longitude            decimal(8, 5)    not null
+    longitude            decimal(8, 5) not null
 );
 
 create table alarmes
