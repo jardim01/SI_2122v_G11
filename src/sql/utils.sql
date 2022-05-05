@@ -1,3 +1,62 @@
+create or replace function obterCliente(idFrota integer) returns record
+    language plpgsql
+as
+$$
+declare
+    r record;
+begin
+    select *
+    into r
+    from clientes
+    where nif = (select cliente_fk from frotas_veiculos where id = idFrota);
+
+    return r;
+end;
+$$;
+
+create or replace function obterFrotaCliente(nif integer) returns record
+    language plpgsql
+as
+$$
+declare
+    r record;
+begin
+    select *
+    into r
+    from frotas_veiculos
+    where cliente_fk = nif;
+
+    return r;
+end;
+$$;
+
+-- Retorna true se o cliente é particular ou falso em caso contrário
+create or replace function clienteParticular(nif integer) returns boolean
+    language plpgsql
+as
+$$
+begin
+    return exists(select 1 from clientes_particulares where nif_cliente = nif);
+end;
+$$;
+
+-- Retorna o número de veículos de um cliente
+create or replace function contarVeiculos(nif integer) returns integer
+    language plpgsql
+as
+$$
+declare
+    idFrotaCliente integer;
+begin
+    idFrotaCliente = (select id from frotas_veiculos where cliente_fk = nif);
+    if (idFrotaCliente is null) then
+        return 0;
+    end if;
+
+    return (select count(*) from veiculos where frota_veic_fk = idFrotaCliente);
+end;
+$$;
+
 create or replace function obterMatricula(id_equip text) returns varchar(8)
     language plpgsql
 as

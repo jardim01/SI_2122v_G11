@@ -1,3 +1,30 @@
+-- TODO: colocar o número máximo de veículos numa constante
+-- Limitação do número de veículos
+create or replace function verificarLimiteVeiculos() returns trigger
+    language plpgsql
+as
+$$
+declare
+    cliente record;
+begin
+    cliente = obtercliente(new.frota_veic_fk);
+    if (not clienteparticular(cliente.nif)) then
+        if (contarveiculos(cliente.nif) > 3) then
+            raise exception 'Número máximo de veículos alcançado';
+        end if;
+    end if;
+
+    return null;
+end;
+$$;
+
+drop trigger if exists verificar_limite_veiculos on veiculos;
+create trigger verificar_limite_veiculos
+    after insert
+    on veiculos
+    for each row
+execute function verificarLimiteVeiculos();
+
 -- j) TODO: Verificar se o registo é válido
 create or replace function inserirAlarme() returns trigger
     language plpgsql
