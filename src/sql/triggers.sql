@@ -55,8 +55,30 @@ begin
 end;
 $$;
 
+drop trigger if exists inserirAlarme on view_alarmes;
 create trigger inserirAlarme
     instead of insert
     on view_alarmes
     for each row
 execute function inserirAlarme();
+
+-- l)
+create or replace function apagarCliente() returns trigger
+    language plpgsql
+as
+$$
+begin
+    update clientes
+    set removed_cliente = '1'
+    where nif = old.nif;
+
+    return null;
+end;
+$$;
+
+drop trigger if exists desativar_cliente on view_clientes;
+create trigger desativar_cliente
+    instead of delete
+    on view_clientes
+    for each row
+execute function apagarCliente();
