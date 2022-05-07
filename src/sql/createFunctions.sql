@@ -1,3 +1,27 @@
+-- e)
+create or replace function contarAlarmes(ano integer, matricula varchar(8)) returns integer
+    language plpgsql
+as
+$$
+declare
+    count integer;
+begin
+    if (matricula is null) then
+        select count(*)
+        into count
+        from alarmes
+        where extract(year from marca_temporal) = ano;
+    else
+        select count(*)
+        into count
+        from alarmes
+        where alarmes.matricula = $2
+          and extract(year from marca_temporal) = ano;
+    end if;
+    return count;
+end;
+$$;
+
 create or replace function obterCliente(idFrota integer) returns record
     language plpgsql
 as
@@ -8,7 +32,7 @@ begin
     select *
     into r
     from clientes
-    where nif = (select cliente_fk from frotas_veiculos where id = idFrota);
+    where nif = (select nif_cliente from frotas_veiculos where id = idFrota);
 
     return r;
 end;
@@ -24,7 +48,7 @@ begin
     select *
     into r
     from frotas_veiculos
-    where cliente_fk = nif;
+    where nif_cliente = nif;
 
     return r;
 end;
@@ -48,12 +72,12 @@ $$
 declare
     idFrotaCliente integer;
 begin
-    idFrotaCliente = (select id from frotas_veiculos where cliente_fk = nif);
+    idFrotaCliente = (select id from frotas_veiculos where nif_cliente = nif);
     if (idFrotaCliente is null) then
         return 0;
     end if;
 
-    return (select count(*) from veiculos where frota_veic_fk = idFrotaCliente);
+    return (select count(*) from veiculos where id_frota = idFrotaCliente);
 end;
 $$;
 
@@ -67,7 +91,7 @@ begin
     select matricula
     into m
     from veiculos
-    where veiculos.equip_id = id_equip;
+    where veiculos.id_equip = $1;
     return m;
 end;
 $$;
@@ -88,7 +112,8 @@ end;
 $$;
 
 -- verifica se um veículo se encontra dentro de uma zona verde
-create or replace function zonaVerdeValida(lat decimal(7, 5), lon decimal(8, 5), id_zona integer) returns boolean
+create or replace function zonaVerdeValida(zLat decimal(7, 5), zLon decimal(8, 5), zRaio integer, lat decimal(7, 5),
+                                           lon decimal(8, 5)) returns boolean
     language plpgsql
 as
 $$
@@ -98,19 +123,34 @@ end;
 $$;
 
 -- verifica se um veículo se encontra dentro de alguma zona verde
-create or replace function dentroZonaVerde(lat decimal(7, 5), lon decimal(8, 5), matricula varchar(8)) returns boolean
+-- se não existirem zonas verdes retorna true
+create or replace function dentroZonaVerde(lat decimal(7, 5), lon decimal(8, 5), _matricula varchar(8)) returns boolean
     language plpgsql
 as
 $$
 declare
-    r record;
+    z record;
+    existemZonas boolean;
 begin
-    for r in select zona_id from zonas_verdes where matricula_fk = matricula
+    for z in select * from zonas_verdes where matricula = _matricula
         loop
-            if (zonaVerdeValida(lat, lon, r.zona_id)) then
+            existemZonas = true;
+            if (zonaVerdeValida(z.latitude, z.longitude, z.raio, lat, lon)) then
                 return true;
             end if;
         end loop;
-    return false;
+    return not existemZonas;
+end;
+$$;
+
+create or replace function registoValido(reg record) returns boolean
+    language plpgsql
+as
+$$
+begin
+    if (reg.marca_temporal is null or reg.latitude is null or reg.longitude is null) then
+        return false;
+    end if;
+    return exists(select 1 from veiculos where id_equip = reg.id_equip);
 end;
 $$;
