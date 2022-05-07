@@ -8,9 +8,6 @@ create table clientes
     removido    bit     not null default '0'
 );
 
-alter table clientes
-    add constraint ref_cliente_fk foreign key (ref_cliente) references clientes (nif) on update cascade;
-
 create table clientes_institucionais
 (
     nif_cliente   int primary key,
@@ -24,6 +21,11 @@ create table clientes_particulares
     cc          int not null check (cc between 0 and 99999999),
     foreign key (nif_cliente) references clientes (nif) on update cascade
 );
+
+alter table clientes
+    add constraint ref_cliente_fk foreign key (ref_cliente)
+        references clientes_particulares (nif_cliente) on update cascade;
+
 
 create table frotas_veiculos
 (

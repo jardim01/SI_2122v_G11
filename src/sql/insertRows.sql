@@ -1,32 +1,31 @@
-insert into clientes (nif, nome, morada, telefone, ref_cliente)
-values (000000000, 'Paulo', 'Rua do rei', 295000000, null);
-insert into clientes (nif, nome, morada, telefone, ref_cliente)
-values (111111111, 'Joana', 'Rua da rainha', 295111111, 000000000);
-insert into clientes (nif, nome, morada, telefone, ref_cliente)
-values (222222222, 'Luis', 'Rua do principe', 295222222, 111111111);
-insert into clientes (nif, nome, morada, telefone, ref_cliente)
-values (333333333, 'Leonor', 'Rua da princesa', 295333333, 222222222);
-insert into clientes (nif, nome, morada, telefone, ref_cliente)
-values (444444444, 'Daniel', 'Rua do escravo', 295444444, 111111111);
-
-insert into clientes_institucionais (nif_cliente, nome_contacto)
-values (000000000, 'Francisco');
-insert into clientes_institucionais (nif_cliente, nome_contacto)
-values (111111111, 'Joao');
-insert into clientes_institucionais (nif_cliente, nome_contacto)
-values (222222222, 'Leonardo');
-
-insert into clientes_particulares (nif_cliente, cc)
-values (222222222, 01234567);
-insert into clientes_particulares (nif_cliente, cc)
-values (333333333, 12345678);
-insert into clientes_particulares (nif_cliente, cc)
-values (444444444, 23456789);
-
-insert into frotas_veiculos (nif_cliente)
-values (000000000);
-insert into frotas_veiculos (nif_cliente)
-values (111111111);
+call inserirCliente(000000000,
+                    'Empresa 1',
+                    'Chelas',
+                    295000000,
+                    null,
+                    'Rui');
+call inserirCliente(111111111,
+                    'Empresa 2',
+                    'Amadora',
+                    295111111,
+                    null,
+                    'Alberto');
+call inserirCliente(222222222,
+                    'João',
+                    'Alameda',
+                    295222222,
+                    null,
+                    null,
+                    true,
+                    55555555);
+call inserirCliente(333333333,
+                    'Joana',
+                    'Saldanha',
+                    295333333,
+                    null,
+                    null,
+                    true,
+                    66666666);
 
 insert into estados_equipamentos (estado)
 values ('Activo');
