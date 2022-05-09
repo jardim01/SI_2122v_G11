@@ -4,15 +4,20 @@ create or replace function analisarRegistoProcessado() returns trigger
 as
 $$
 declare
-    matr   varchar(8);
-    estado text;
+    matr    varchar(8);
+    _estado varchar(20);
 begin
     matr = obterMatricula(new.id_equip);
     -- verificar se está dentro das zonas verdes
     if (not dentroZonaVerde(new.latitude, new.longitude, matr)) then
         -- verificar se está em pausa de alarmes
-        select estado_equip into estado from veiculos where matricula = matr;
-        if (estado != 'PausaDeAlarmes') then
+        select estado
+        into _estado
+        from veiculos
+                 join equipamentos on (id_equip = id)
+        where matricula = matr;
+
+        if (_estado != 'PausaDeAlarmes') then
             -- gerar alarme
             call gerarAlarme(new.id_reg, matr);
         end if;
@@ -28,7 +33,6 @@ create trigger analisar_registo_processado
     for each row
 execute function analisarRegistoProcessado();
 
--- TODO: colocar o número máximo de veículos numa constante
 -- Limitação do número de veículos
 create or replace function verificarLimiteVeiculos() returns trigger
     language plpgsql
@@ -38,7 +42,7 @@ declare
     cliente record;
 begin
     cliente = obterCliente(new.id_frota);
-    if (not clienteParticular(cliente.nif)) then
+    if (cliente.tipo = 'P') then
         if (contarVeiculos(cliente.nif) > 3) then
             raise exception 'Número máximo de veículos alcançado';
         end if;
@@ -63,9 +67,12 @@ $$
 declare
     r    record;
     m    varchar(8);
-    nome text;
-    t    timestamp(0);
+    nome varchar(60);
 begin
+    if new.marca_temporal is not null then
+        raise exception 'A marca temporal é gerada automaticamente';
+    end if;
+
     select * into r from registos_nao_processados where id_reg = new.id_reg;
     if r is null then
         raise exception 'reg_id inválido';
@@ -76,26 +83,21 @@ begin
     end if;
 
     m = obterMatricula(r.id_equip);
-    if new.matricula != m then
+    if new.matricula is not null and new.matricula != m then
         raise exception 'A matrícula do registo não corresponde com a fornecida';
     end if;
 
     nome = obterNomeCondutorAtual(m);
-    if new.nome_condutor != nome then
+    if new.nome_condutor is not null and new.nome_condutor != nome then
         raise exception 'A nome do condutor atual não corresponde com o fornecido';
     end if;
 
-    if new.latitude != r.latitude then
+    if new.latitude is not null and new.latitude != r.latitude then
         raise exception 'A latitude não corresponde com a fornecida';
     end if;
 
-    if new.longitude != r.longitude then
+    if new.longitude is not null and new.longitude != r.longitude then
         raise exception 'A longitude não corresponde com a fornecida';
-    end if;
-
-    t = CURRENT_TIMESTAMP;
-    if new.marca_temporal is not null then
-        t = new.marca_temporal;
     end if;
 
     if dentrozonaverde(r.latitude, r.longitude, m) then
@@ -103,13 +105,6 @@ begin
     end if;
 
     call processarRegistoValido(r);
-
-    -- usar a marca temporal
-    if new.marca_temporal is not null then
-        update alarmes
-        set marca_temporal = t
-        where id_reg = r.id_reg;
-    end if;
 
     return null;
 end;

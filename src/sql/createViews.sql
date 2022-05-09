@@ -1,5 +1,5 @@
 create or replace view vista_clientes as
-select nif, nome, morada, telefone, ref_cliente
+select nif, nome, morada, telefone, ref_cliente, tipo
 from clientes
 where removido = '0';
 

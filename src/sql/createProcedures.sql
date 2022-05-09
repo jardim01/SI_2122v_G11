@@ -63,24 +63,24 @@ call processarRegistos();
 
 -- d)
 create or replace procedure inserirCliente(_nif integer,
-                                           _nome text,
-                                           _morada text,
+                                           _nome varchar(60),
+                                           _morada varchar(50),
                                            _telefone integer,
                                            _ref_cliente integer,
-                                           _nome_contacto text default null,
-                                           particular boolean default false,
-                                           _cc integer default null)
+                                           tipo char,
+                                           _nome_contacto varchar(60),
+                                           _cc integer)
     language plpgsql
 as
 $$
 begin
-    insert into clientes (nif, nome, morada, telefone, ref_cliente)
-    values (_nif, _nome, _morada, _telefone, _ref_cliente);
+    insert into clientes (nif, nome, morada, telefone, ref_cliente, tipo)
+    values (_nif, _nome, _morada, _telefone, _ref_cliente, tipo);
 
     insert into frotas_veiculos (nif_cliente)
     values (_nif);
 
-    if (particular) then
+    if (tipo = 'P') then
         insert into clientes_particulares (nif_cliente, cc)
         values (_nif, _cc);
     else
@@ -104,8 +104,8 @@ $$;
 create or replace procedure atualizarCliente(_nif integer,
                                              novo_nif integer,
                                              novo_cc integer,
-                                             novo_nome text,
-                                             nova_morada text,
+                                             novo_nome varchar(60),
+                                             nova_morada varchar(50),
                                              nova_ref_cliente integer)
     language plpgsql
 as
@@ -131,10 +131,8 @@ $$;
 
 -- h)
 create or replace procedure criarVeiculo(matr varchar(8),
-                                         nomeCondutor text,
+                                         nomeCondutor varchar(60),
                                          telefoneCondutor integer,
-                                         idEquip text,
-                                         estadoEquip text,
                                          nifCliente integer,
                                          lat numeric(7, 5) default null,
                                          lon numeric(8, 5) default null,
@@ -144,11 +142,15 @@ as
 $$
 declare
     frota record;
+    idEquip integer;
 begin
     frota = obterFrotaCliente(nifCliente);
 
-    insert into veiculos (matricula, nome_cond_atual, telef_cond_actual, id_equip, estado_equip, id_frota)
-    values (matr, nomeCondutor, telefoneCondutor, idEquip, estadoEquip, frota.id);
+    insert into equipamentos (estado)
+    values ('Activo') returning id into idEquip;
+
+    insert into veiculos (matricula, nome_cond_atual, telef_cond_actual, id_equip, id_frota)
+    values (matr, nomeCondutor, telefoneCondutor, idEquip, frota.id);
 
     if (lat is not null and lon is not null and r is not null) then
         insert into zonas_verdes (latitude, longitude, raio, matricula)

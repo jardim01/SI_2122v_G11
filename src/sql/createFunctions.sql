@@ -54,16 +54,6 @@ begin
 end;
 $$;
 
--- Retorna true se o cliente é particular ou falso em caso contrário
-create or replace function clienteParticular(nif integer) returns boolean
-    language plpgsql
-as
-$$
-begin
-    return exists(select 1 from clientes_particulares where nif_cliente = nif);
-end;
-$$;
-
 -- Retorna o número de veículos de um cliente
 create or replace function contarVeiculos(nif integer) returns integer
     language plpgsql
@@ -81,12 +71,12 @@ begin
 end;
 $$;
 
-create or replace function obterMatricula(id_equip text) returns varchar(8)
+create or replace function obterMatricula(id_equip integer) returns varchar(8)
     language plpgsql
 as
 $$
 declare
-    m text;
+    m varchar(8);
 begin
     select matricula
     into m
@@ -96,12 +86,12 @@ begin
 end;
 $$;
 
-create or replace function obterNomeCondutorAtual(matr varchar(8)) returns text
+create or replace function obterNomeCondutorAtual(matr varchar(8)) returns varchar(60)
     language plpgsql
 as
 $$
 declare
-    nome text;
+    nome varchar(60);
 begin
     select nome_cond_atual
     into nome

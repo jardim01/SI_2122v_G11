@@ -6,6 +6,7 @@ drop table if exists registos_processados cascade;
 drop table if exists alarmes cascade;
 drop table if exists registos_nao_processados cascade;
 drop table if exists zonas_verdes cascade;
+drop table if exists equipamentos cascade;
 drop table if exists estados_equipamentos cascade;
 drop table if exists veiculos cascade;
 drop table if exists frotas_veiculos cascade;

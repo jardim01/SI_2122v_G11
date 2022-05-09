@@ -1,6 +1,4 @@
-begin transaction;
-
-create procedure testesInserirClienteComSucesso()
+create or replace procedure testeInserirClienteComSucesso()
     language plpgsql
 as
 $$
@@ -23,7 +21,7 @@ exception
 end;
 $$;
 
-create procedure testesInserirClienteComErro()
+create or replace procedure testesInserirClienteComErro()
     language plpgsql
 as
 $$
@@ -46,7 +44,7 @@ exception
 end;
 $$;
 
-create procedure testeAtualizarClienteComSucesso()
+create or replace procedure testeAtualizarClienteComSucesso()
     language plpgsql
 as
 $$
@@ -54,7 +52,7 @@ declare
     testName text;
 begin
     testName = 'Atualizar cliente com dados bem passados';
-    call atualizarCliente(999999999,
+    call atualizarCliente(000000000,
                           888888888,
                           12345678,
                           'John Doe',
@@ -67,7 +65,7 @@ exception
 end;
 $$;
 
-create procedure testeAtualizarClienteComErro()
+create or replace procedure testeAtualizarClienteComErro()
     language plpgsql
 as
 $$
@@ -88,7 +86,7 @@ exception
 end;
 $$;
 
-create procedure testeRemoverClienteComSucesso()
+create or replace procedure testeRemoverClienteComSucesso()
     language plpgsql
 as
 $$
@@ -104,7 +102,7 @@ exception
 end;
 $$;
 
-create procedure testeRemoverClienteComErro()
+create or replace procedure testeRemoverClienteComErro()
     language plpgsql
 as
 $$
@@ -120,7 +118,7 @@ exception
 end;
 $$;
 
-create procedure testeContarAlarmes()
+create or replace procedure testeContarAlarmes()
     language plpgsql
 as
 $$
@@ -132,13 +130,13 @@ declare
 begin
     testName = 'Contar alarmes';
 
+    year = extract(year from CURRENT_TIMESTAMP);
     n0 = contarAlarmes(year, '00-AA-00');
 
     insert into registos_processados (marca_temporal_proc, id_equip, latitude, longitude)
-    values (CURRENT_TIMESTAMP, '1ZZZ', 11.2, 0);
+    values (CURRENT_TIMESTAMP, 1, 11.2, 0);
     -- alarme gerado pelo trigger
 
-    year = extract(year from CURRENT_TIMESTAMP);
     n1 = contarAlarmes(year, '00-AA-00');
     if (n1 != n0 + 1) then
         raise exception '% -> Resultado NOK', testName;
@@ -148,7 +146,7 @@ begin
 end;
 $$;
 
-create procedure testeTratamentoRegistos()
+create or replace procedure testeTratamentoRegistos()
     language plpgsql
 as
 $$
@@ -158,9 +156,9 @@ declare
 begin
     testName = 'Tratamento de registos não processados';
     insert into registos_nao_processados (id_equip, marca_temporal, latitude, longitude)
-    values ('Id inváido 1', null, null, null);
+    values (-1, null, null, null);
     insert into registos_nao_processados (id_equip, marca_temporal, latitude, longitude)
-    values ('Id inváido 2', null, null, null);
+    values (-2, null, null, null);
     call processarRegistos();
 
     select count(*) from registos_nao_processados into remaining;
@@ -172,7 +170,7 @@ begin
 end;
 $$;
 
-create procedure testeVistaAlarmes()
+create or replace procedure testeVistaAlarmes()
     language plpgsql
 as
 $$
@@ -181,6 +179,11 @@ declare
     count    integer;
 begin
     testName = 'Vista de alarmes';
+
+    insert into registos_processados (marca_temporal_proc, id_equip, latitude, longitude)
+    values (CURRENT_TIMESTAMP, 1, 11.2, 0);
+    -- alarme gerado pelo trigger
+
     select count(*) from vista_alarmes into count;
 
     if (count = 0) then
@@ -190,7 +193,7 @@ begin
 end;
 $$;
 
-create procedure testeInserirVistaAlarmes()
+create or replace procedure testeInserirVistaAlarmes()
     language plpgsql
 as
 $$
@@ -201,7 +204,7 @@ begin
     testName = 'Inserir sobre vista de alarmes';
 
     insert into registos_nao_processados (id_equip, marca_temporal, latitude, longitude)
-    values ('1ZZZ', CURRENT_TIMESTAMP, 1, 0)
+    values (1, CURRENT_TIMESTAMP, 1, 0)
     returning id_reg into id;
 
     insert into vista_alarmes (id_reg)
@@ -209,7 +212,7 @@ begin
 end;
 $$;
 
-create procedure testeRemoverRegistosInvalidos()
+create or replace procedure testeRemoverRegistosInvalidos()
     language plpgsql
 as
 $$
@@ -243,7 +246,7 @@ begin
 end;
 $$;
 
-create procedure testeRemoverClienteVista()
+create or replace procedure testeRemoverClienteVista()
     language plpgsql
 as
 $$
@@ -252,7 +255,7 @@ declare
     remaining integer;
 begin
     testName = 'Remover cliente através da vista';
-    delete from vista_clientes where nif is not null;
+    delete from vista_clientes;
     select count(*) from vista_clientes into remaining;
 
     if (remaining != 0) then
@@ -263,23 +266,56 @@ end;
 $$;
 
 -- d)
-call testesInserirClienteComSucesso();
-call testesInserirClienteComErro();
-call testeAtualizarClienteComSucesso();
-call testeAtualizarClienteComErro();
-call testeRemoverClienteComSucesso();
-call testeRemoverClienteComErro();
--- e) g)
-call testeContarAlarmes();
--- f)
-call testeTratamentoRegistos();
--- i)
-call testeVistaAlarmes();
--- j)
-call testeInserirVistaAlarmes();
--- k)
-call testeRemoverRegistosInvalidos();
--- l)
-call testeRemoverClienteVista();
+start transaction isolation level repeatable read;
+call testeInserirClienteComSucesso();
+rollback;
 
+start transaction isolation level repeatable read;
+call testesInserirClienteComErro();
+rollback;
+
+start transaction isolation level repeatable read;
+call testeAtualizarClienteComSucesso();
+rollback;
+
+start transaction isolation level repeatable read;
+call testeAtualizarClienteComErro();
+rollback;
+
+start transaction isolation level read committed;
+call testeRemoverClienteComSucesso();
+rollback;
+
+start transaction isolation level read committed;
+call testeRemoverClienteComErro();
+rollback;
+
+-- e) g)
+start transaction isolation level serializable;
+call testeContarAlarmes();
+rollback;
+
+-- f)
+start transaction isolation level serializable;
+call testeTratamentoRegistos();
+rollback;
+
+-- i)
+start transaction isolation level serializable;
+call testeVistaAlarmes();
+rollback;
+
+-- j)
+start transaction isolation level repeatable read;
+call testeInserirVistaAlarmes();
+rollback;
+
+-- k)
+start transaction isolation level serializable;
+call testeRemoverRegistosInvalidos();
+rollback;
+
+-- l)
+start transaction isolation level repeatable read;
+call testeRemoverClienteVista();
 rollback;

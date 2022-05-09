@@ -1,17 +1,18 @@
 create table clientes
 (
     nif         int primary key check (nif between 0 and 999999999),
-    nome        text    not null,
-    morada      text    not null,
-    telefone    integer not null check (telefone between 0 and 999999999),
+    nome        varchar(60) not null,
+    morada      varchar(60) not null,
+    telefone    integer     not null check (telefone between 0 and 999999999),
     ref_cliente int,
-    removido    bit     not null default '0'
+    removido    bit         not null default '0',
+    tipo        char check (tipo in ('P', 'I'))
 );
 
 create table clientes_institucionais
 (
     nif_cliente   int primary key,
-    nome_contacto text not null,
+    nome_contacto varchar(60) not null,
     foreign key (nif_cliente) references clientes (nif) on update cascade
 );
 
@@ -36,7 +37,14 @@ create table frotas_veiculos
 
 create table estados_equipamentos
 (
-    estado text not null primary key
+    estado varchar(20) not null primary key
+);
+
+create table equipamentos
+(
+    id     serial primary key,
+    estado varchar(20),
+    foreign key (estado) references estados_equipamentos (estado)
 );
 
 create or replace function validar_matricula(matricula varchar(8)) returns boolean
@@ -67,14 +75,13 @@ $$;
 create table veiculos
 (
     matricula         varchar(8) primary key check (validar_matricula(matricula)),
-    nome_cond_atual   text        not null,
+    nome_cond_atual   varchar(60) not null,
     telef_cond_actual int         not null,
-    id_equip          text unique not null,
-    estado_equip      text        not null,
+    id_equip          integer     not null unique,
     id_frota          int         not null,
     n_alarmes         int         not null default 0,
-    foreign key (id_frota) references frotas_veiculos (id),
-    foreign key (estado_equip) references estados_equipamentos (estado)
+    foreign key (id_equip) references equipamentos (id),
+    foreign key (id_frota) references frotas_veiculos (id)
 );
 
 create table zonas_verdes
@@ -90,7 +97,7 @@ create table zonas_verdes
 create table registos_nao_processados
 (
     id_reg         serial primary key,
-    id_equip       text,
+    id_equip       integer,
     marca_temporal timestamp(0),
     latitude       decimal(7, 5),
     longitude      decimal(8, 5)
@@ -100,15 +107,15 @@ create table registos_processados
 (
     id_reg              serial primary key,
     marca_temporal_proc timestamp(0)  not null,
-    id_equip            text          not null,
+    id_equip            integer       not null,
     latitude            decimal(7, 5) not null,
     longitude           decimal(8, 5) not null,
-    foreign key (id_equip) references veiculos (id_equip)
+    foreign key (id_equip) references equipamentos (id)
 );
 
 create table registos_invalidos
 (
-    equip_id             text,
+    equip_id             integer,
     marca_temporal_inval timestamp(0),
     latitude             decimal(7, 5),
     longitude            decimal(8, 5)
@@ -117,7 +124,7 @@ create table registos_invalidos
 create table alarmes
 (
     id_reg         int          not null unique,
-    matricula      text         not null,
+    matricula      varchar(8)   not null,
     marca_temporal timestamp(0) not null,
     foreign key (id_reg) references registos_processados (id_reg),
     foreign key (matricula) references veiculos (matricula)
