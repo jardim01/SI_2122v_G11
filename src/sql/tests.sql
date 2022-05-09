@@ -1,3 +1,5 @@
+begin transaction;
+
 create or replace procedure testeInserirClienteComSucesso()
     language plpgsql
 as
@@ -11,13 +13,13 @@ begin
                         'Planeta Terra',
                         987654321,
                         null,
+                        'P',
                         null,
-                        true,
                         12345678);
     raise notice '% -> Resultado OK', testName;
 exception
     when others then
-        raise notice '% -> Resultado NOK', testName;
+        raise exception '% -> Resultado NOK', testName;
 end;
 $$;
 
@@ -264,6 +266,8 @@ begin
     raise notice '% -> Result OK', testName;
 end;
 $$;
+
+commit;
 
 -- d)
 start transaction isolation level repeatable read;
