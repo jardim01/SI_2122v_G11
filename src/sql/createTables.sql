@@ -31,7 +31,7 @@ alter table clientes
 create table frotas_veiculos
 (
     id          serial primary key,
-    nif_cliente int not null,
+    nif_cliente int not null unique,
     foreign key (nif_cliente) references clientes (nif) on update cascade
 );
 
